@@ -1,1 +1,5 @@
-export type BerthPlanPayload = Record<string, unknown>;
+export interface ReassignPlanPayload {
+  berth_id: number;
+  dispatcher_id?: number;
+  reason?: string;
+}

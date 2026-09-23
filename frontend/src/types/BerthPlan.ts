@@ -7,4 +7,5 @@ export interface BerthPlan {
   priority: string;
   status: string;
   dispatcher_id: number;
+  conflict_reason: string | null;
 }
