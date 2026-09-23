@@ -1,0 +1,22 @@
+<div class="timeline">
+  <div class="timeline-scale">
+    <span *ngFor="let day of days" class="scale-cell">{{ day }}</span>
+  </div>
+  <div class="timeline-row" *ngFor="let berth of berths">
+    <div class="timeline-label">
+      <strong>{{ berth.berth_code }}</strong>
+      <span>{{ berth.length_m }}m</span>
+    </div>
+    <div class="timeline-track">
+      <div
+        class="timeline-bar bar-{{ plan.status }}"
+        *ngFor="let plan of plansOf(berth.id)"
+        [style.left.%]="plan.left"
+        [style.width.%]="plan.width"
+        [title]="'#' + plan.id + ' ' + plan.status"
+      >
+        #{{ plan.id }}
+      </div>
+    </div>
+  </div>
+</div>

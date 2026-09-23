@@ -57,6 +57,19 @@ backend/src/routes, controllers, services, models, repositories, middlewares, co
 - BerthPlanStatus: constants/BerthPlanStatus、types/BerthPlanStatus、constructors、logTemplates、errorMessages、筛选器、展示组件/控制器均有引用。
 - YardSlotStatus: constants/YardSlotStatus、types/YardSlotStatus、constructors、logTemplates、errorMessages、筛选器、展示组件/控制器均有引用。
 - WorkTaskType: constants/WorkTaskType、types/WorkTaskType、constructors、logTemplates、errorMessages、筛选器、展示组件/控制器均有引用。
+- ConflictSeverity（MEDIUM/HIGH/CRITICAL）:
+  - 后端：`backend/src/constants/ConflictSeverity.ts`、`backend/src/utils/berthConflict.ts`（分级计算）、`backend/src/models/BerthPlan.ts`（conflict_severity 字段）、`backend/src/services/BerthPlanService.ts`（改派后写回）、`backend/src/seed.ts`、`database/init.sql`。
+  - 前端：`frontend/src/types/ConflictSeverity.ts`、`frontend/src/constants/ConflictSeverity.ts`（文案/提示）、`frontend/src/utils/berthConflict.ts`、`frontend/src/hooks/useBerthConflict.ts`、`frontend/src/components/common/ConflictBadge.ts`、`frontend/src/components/common/PlanCard.html`、`frontend/src/pages/DashboardPage.*`。
+
+## 靠泊冲突处置流程
+
+1. 后端 `GET /api/berth-plan` 每次按“同一泊位 + 时间区间半开半闭重叠”重算冲突，严重程度按重叠时长占较短计划比例分级（≥70% 严重、≥30% 明显、其余轻度）。
+2. 总览页 `/dashboard` 列出全部受影响计划（冲突对象、严重程度），并展示各泊位占用计划数；数字随改派实时更新。
+3. 泊位页 `/berths` 按泊位分组，计划卡片标注冲突对象、严重程度与冲突原因；展开卡片可改派。
+4. `GET /api/berth-plan/:id/candidates` 给出候选泊位并标注 `suitable/free`（长度、水深与时间窗）。
+5. `PATCH /api/berth-plan/:id/reassign` 提交改派：泊位短于船舶返回 `BERTH_LENGTH_UNSUITABLE`；仍有时间重叠则保持 `CONFLICT` 并写回 `conflict_plan_id/conflict_severity/conflict_reason`；无重叠则进入 `APPROVED`。
+6. 改派结果保存在后端内存数据中；前端同步写入 `localStorage`（`port-yard:berthPlan`），离开页面或刷新后再回来，改派结果与总览占用数字都会保留。
+
 
 ## 为什么会牵一发动全身
 

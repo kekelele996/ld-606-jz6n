@@ -6,5 +6,5 @@ export interface WorkTask {
   team_id: number;
   status: string;
   planned_start: string;
-  finished_at: string;
+  finished_at: string | null;
 }

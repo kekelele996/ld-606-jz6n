@@ -1,0 +1,73 @@
+<section class="dashboard">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">port-yard</p>
+      <h1>港口运行总览</h1>
+      <p class="subtitle">冲突处置、泊位占用与到港计划一屏掌握</p>
+    </div>
+    <button class="btn primary" (click)="goBerths()">前往处置冲突</button>
+  </header>
+
+  <section class="metrics">
+    <app-stat-card label="受冲突影响计划" [value]="affectedPlans().length" [hint]="criticalCount() + ' 条严重冲突'" tone="danger"></app-stat-card>
+    <app-stat-card label="周期内泊位占用" [value]="totalOccupancy()" hint="含草稿/冲突/已批准计划"></app-stat-card>
+    <app-stat-card label="已批准计划" [value]="approvedCount()" hint="无时间重叠的计划"></app-stat-card>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>受影响计划</h2>
+      <span class="panel-count">{{ affectedPlans().length }} 条待调度处置</span>
+    </div>
+    <div class="affected-empty" *ngIf="affectedPlans().length === 0">
+      当前没有时间重叠的靠泊计划。
+    </div>
+    <table class="affected-table" *ngIf="affectedPlans().length > 0">
+      <thead>
+        <tr>
+          <th>计划</th>
+          <th>船舶</th>
+          <th>泊位</th>
+          <th>计划时间</th>
+          <th>冲突对象</th>
+          <th>严重程度</th>
+          <th>状态</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let plan of affectedPlans()" (click)="goConflict(plan.id)" class="affected-row">
+          <td>#{{ plan.id }}</td>
+          <td>{{ vesselName(plan.vessel_id) }}</td>
+          <td>{{ berthCode(plan.berth_id) }}</td>
+          <td>{{ formatTime(plan.planned_arrival) }} - {{ formatTime(plan.planned_departure) }}</td>
+          <td>
+            <ng-container *ngIf="plan.conflict_plan_id != null">#{{ plan.conflict_plan_id }} · {{ otherVesselName(plan.conflict_plan_id) }}</ng-container>
+          </td>
+          <td><app-conflict-badge [severity]="plan.conflict_severity"></app-conflict-badge></td>
+          <td><app-status-badge [status]="plan.status"></app-status-badge></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <h2>泊位占用分布</h2>
+      <span class="panel-count">改派后占用数字自动保留</span>
+    </div>
+    <div class="berth-stats">
+      <div class="berth-stat" *ngFor="let berth of berths()">
+        <div class="berth-stat-head">
+          <strong>{{ berth.berth_code }}</strong>
+          <span class="badge">{{ berthStatusText(berth.current_status) }}</span>
+        </div>
+        <div class="berth-stat-body">
+          <span class="occupy-num">{{ occupancyOf(berth.id) }}</span>
+          <span class="occupy-label">条占用计划</span>
+        </div>
+        <div class="berth-stat-foot">{{ formatMeters(berth.length_m) }} · 水深 {{ berth.water_depth_m }}m</div>
+      </div>
+    </div>
+    <app-berth-timeline [berths]="berths()" [plans]="plans()"></app-berth-timeline>
+  </section>
+</section>

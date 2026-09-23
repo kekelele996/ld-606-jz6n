@@ -1,0 +1,72 @@
+<article class="plan-card" [class.plan-conflict]="plan.status === 'CONFLICT'" [class.plan-approved]="plan.status === 'APPROVED'" [class.expanded]="expanded">
+  <header class="plan-head" (click)="onToggle()">
+    <div class="plan-title">
+      <span class="plan-id">#{{ plan.id }}</span>
+      <strong>{{ vessel?.vessel_name ?? ('船舶 #' + plan.vessel_id) }}</strong>
+      <app-status-badge [status]="plan.status"></app-status-badge>
+      <app-conflict-badge [severity]="plan.conflict_severity"></app-conflict-badge>
+    </div>
+    <div class="plan-meta">
+      <span>{{ berth?.berth_code ?? ('泊位 #' + plan.berth_id) }}</span>
+      <span>{{ formatTime(plan.planned_arrival) }} - {{ formatTime(plan.planned_departure) }}</span>
+      <span class="priority priority-{{ plan.priority }}">{{ priorityText }}优先级</span>
+      <span class="chevron">{{ expanded ? '收起' : '处置' }}</span>
+    </div>
+  </header>
+
+  <div class="plan-vessel" *ngIf="vessel">
+    <span>{{ vessel.carrier }}</span>
+    <span>船长 {{ formatMeters(vessel.length_m) }}</span>
+    <span>吃水 {{ vessel.draft_m }} m</span>
+    <span>{{ vesselStatusText }}</span>
+  </div>
+
+  <div class="conflict-box" *ngIf="plan.status === 'CONFLICT'">
+    <div class="conflict-line">
+      <span class="conflict-label">冲突对象</span>
+      <strong>{{ conflictTarget }}</strong>
+    </div>
+    <div class="conflict-line" *ngIf="otherPlan">
+      <span class="conflict-label">对方时间</span>
+      <span>{{ otherTimeRange }} · {{ otherVesselName }}（{{ otherBerthCode }}）</span>
+    </div>
+    <p class="conflict-reason" *ngIf="plan.conflict_reason">{{ plan.conflict_reason }}</p>
+  </div>
+
+  <p class="reassign-note" *ngIf="reassignNote">
+    <span class="reassign-flag">改派记录</span>{{ reassignNote }}
+  </p>
+
+  <div class="reassign-panel" *ngIf="expanded">
+    <ng-container *ngIf="plan.status === 'CONFLICT'; else approvedBlock">
+      <h4>选择空闲且长度合适的泊位</h4>
+      <div class="candidate-grid">
+        <label
+          class="candidate"
+          *ngFor="let candidate of candidates"
+          [class.selected]="chosenBerthId === candidate.berth_id"
+          [class.disabled]="!candidate.free"
+        >
+          <input
+            type="radio"
+            name="berth-{{ plan.id }}"
+            [value]="candidate.berth_id"
+            [checked]="chosenBerthId === candidate.berth_id"
+            (change)="onChoose($event)"
+          />
+          <span class="candidate-code">{{ candidate.berth_code }}</span>
+          <span class="candidate-size">{{ formatMeters(candidate.length_m) }} / 水深 {{ candidate.water_depth_m }}m</span>
+          <span class="candidate-hint" [class.ok]="candidate.free" [class.bad]="!candidate.free">{{ candidateHint(candidate) }}</span>
+        </label>
+      </div>
+      <div class="reassign-actions">
+        <button class="btn primary" [disabled]="!canSubmit" (click)="onSubmit()">提交改派</button>
+        <button class="btn ghost" (click)="onCancel()">取消</button>
+        <span class="submit-msg" *ngIf="reassignMessage" [class.bad]="reassignError">{{ reassignMessage }}</span>
+      </div>
+    </ng-container>
+    <ng-template #approvedBlock>
+      <p class="approved-tip">该计划已无时间重叠，状态为已批准，无需继续处置。</p>
+    </ng-template>
+  </div>
+</article>

@@ -1,0 +1,54 @@
+<section class="berths-page">
+  <header class="page-head">
+    <div>
+      <p class="eyebrow">berth plan</p>
+      <h1>泊位计划</h1>
+      <p class="subtitle">在计划卡片上处置冲突：选择空闲且长度合适的泊位后提交</p>
+    </div>
+    <div class="head-side">
+      <app-conflict-badge severity="CRITICAL"></app-conflict-badge>
+      <span class="panel-count">{{ conflictCount() }} 条计划存在时间重叠</span>
+    </div>
+  </header>
+
+  <section class="panel">
+    <div class="panel-head"><h2>泊位甘特图</h2></div>
+    <app-berth-timeline [berths]="berths()" [plans]="plans()"></app-berth-timeline>
+  </section>
+
+  <section class="berth-groups">
+    <div class="panel berth-group" *ngFor="let berth of berths()">
+      <header class="berth-group-head">
+        <div>
+          <h2>{{ berth.berth_code }}</h2>
+          <span class="berth-sub">{{ berthTypeText(berth.berth_type) }} · {{ formatMeters(berth.length_m) }} · 水深 {{ berth.water_depth_m }}m</span>
+        </div>
+        <div class="berth-group-meta">
+          <span class="badge">{{ berthStatusText(berth.current_status) }}</span>
+          <span class="occupy-pill">{{ plansOfBerth(berth.id).length }} 条计划</span>
+        </div>
+      </header>
+      <p class="berth-safety">{{ berth.safety_note }}</p>
+      <div class="plan-list">
+        <app-plan-card
+          *ngFor="let plan of plansOfBerth(berth.id)"
+          [plan]="plan"
+          [otherPlan]="otherPlanOf(plan)"
+          [allPlans]="plans()"
+          [berths]="berths()"
+          [vessels]="vessels()"
+          [candidates]="candidatesOf(plan)"
+          [expanded]="isExpanded(plan.id)"
+          [submitting]="submitting"
+          [reassignMessage]="messageOf(plan.id)"
+          [reassignError]="isError(plan.id)"
+          [chosenBerthId]="chosenBerthId(plan.id)"
+          (toggle)="onToggle($event)"
+          (chooseBerth)="onChoose($event)"
+          (submit)="onSubmit($event)"
+          (cancel)="onCancel($event)"
+        ></app-plan-card>
+      </div>
+    </div>
+  </section>
+</section>
